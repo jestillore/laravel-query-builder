@@ -19,4 +19,5 @@ return [
         'append' => 'append',
     ],
 
+    'silent' => env('QUERY_BUILDER_SILENT', false)
 ];

@@ -36,6 +36,11 @@ class QueryBuilder extends Builder
     /** @var \Illuminate\Http\Request */
     protected $request;
 
+    /**
+     * @var bool
+     */
+    protected $silent;
+
     public function __construct(Builder $builder, ? Request $request = null)
     {
         parent::__construct(clone $builder->getQuery());
@@ -48,6 +53,10 @@ class QueryBuilder extends Builder
 
         if ($this->request->sorts()) {
             $this->allowedSorts('*');
+        }
+
+        if (is_null($this->silent)) {
+            $this->silent = config('query-builder.silent');
         }
     }
 
@@ -205,6 +214,16 @@ class QueryBuilder extends Builder
 
     protected function addFiltersToQuery(Collection $filters)
     {
+        if ($this->silent) {
+            $allowedFilterNames = $this->allowedFilters->map->getProperty();
+
+            $filters = $filters->filter(function ($filter, $key) use ($allowedFilterNames) {
+                if ($allowedFilterNames->contains($key)) {
+                    return $filter;
+                }
+            });
+        }
+
         $filters->each(function ($value, $property) {
             $filter = $this->findFilter($property);
 
@@ -292,14 +311,16 @@ class QueryBuilder extends Builder
 
     protected function guardAgainstUnknownFilters()
     {
-        $filterNames = $this->request->filters()->keys();
+        if (!$this->silent) {
+            $filterNames = $this->request->filters()->keys();
 
-        $allowedFilterNames = $this->allowedFilters->map->getProperty();
+            $allowedFilterNames = $this->allowedFilters->map->getProperty();
 
-        $diff = $filterNames->diff($allowedFilterNames);
+            $diff = $filterNames->diff($allowedFilterNames);
 
-        if ($diff->count()) {
-            throw InvalidFilterQuery::filtersNotAllowed($diff, $allowedFilterNames);
+            if ($diff->count()) {
+                throw InvalidFilterQuery::filtersNotAllowed($diff, $allowedFilterNames);
+            }
         }
     }
 

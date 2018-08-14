@@ -240,6 +240,24 @@ class FilterTest extends TestCase
     }
 
     /** @test */
+    public function it_can_filter_models_even_with_invalid_filters_if_silent()
+    {
+        config([
+            'query-builder.silent' => true
+        ]);
+
+        $models = $this
+            ->createQueryFromFilterRequest([
+                'name' => $this->models->first()->name,
+                'id' => 1
+            ])
+            ->allowedFilters('name')
+            ->get();
+
+        $this->assertCount(1, $models);
+    }
+
+    /** @test */
     public function it_can_create_a_custom_filter_with_an_instantiated_filter()
     {
         $customFilter = new class('test1') implements CustomFilter {
