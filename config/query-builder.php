@@ -19,5 +19,5 @@ return [
         'append' => 'append',
     ],
 
-    'silent' => env('QUERY_BUILDER_SILENT', false)
+    'safe' => env('QUERY_BUILDER_SAFE', false)
 ];

@@ -39,7 +39,7 @@ class QueryBuilder extends Builder
     /**
      * @var bool
      */
-    protected $silent;
+    protected $safe;
 
     public function __construct(Builder $builder, ? Request $request = null)
     {
@@ -55,8 +55,8 @@ class QueryBuilder extends Builder
             $this->allowedSorts('*');
         }
 
-        if (is_null($this->silent)) {
-            $this->silent = config('query-builder.silent');
+        if (is_null($this->safe)) {
+            $this->safe = config('query-builder.safe');
         }
     }
 
@@ -110,7 +110,9 @@ class QueryBuilder extends Builder
             return Filter::partial($filter);
         });
 
-        $this->guardAgainstUnknownFilters();
+        if (!$this->safe) {
+            $this->guardAgainstUnknownFilters();
+        }
 
         $this->addFiltersToQuery($this->request->filters());
 
@@ -173,18 +175,18 @@ class QueryBuilder extends Builder
 
         $this->allowedAppends = collect($appends);
 
-        $this->guardAgainstUnknownAppends();
-
         $appends = $this->request->appends();
 
-        if ($this->silent) {
+        if ($this->safe) {
             $appends = $appends->filter(function ($append) {
                 if ($this->allowedAppends->contains($append)) {
                     return $append;
                 }
             });
+        } else {
+            $this->guardAgainstUnknownAppends();
         }
-        
+
         $this->appends = $appends;
 
         return $this;
@@ -224,7 +226,7 @@ class QueryBuilder extends Builder
 
     protected function addFiltersToQuery(Collection $filters)
     {
-        if ($this->silent) {
+        if ($this->safe) {
             $allowedFilterNames = $this->allowedFilters->map->getProperty();
 
             $filters = $filters->filter(function ($filter, $key) use ($allowedFilterNames) {
@@ -321,16 +323,14 @@ class QueryBuilder extends Builder
 
     protected function guardAgainstUnknownFilters()
     {
-        if (!$this->silent) {
-            $filterNames = $this->request->filters()->keys();
+        $filterNames = $this->request->filters()->keys();
 
-            $allowedFilterNames = $this->allowedFilters->map->getProperty();
+        $allowedFilterNames = $this->allowedFilters->map->getProperty();
 
-            $diff = $filterNames->diff($allowedFilterNames);
+        $diff = $filterNames->diff($allowedFilterNames);
 
-            if ($diff->count()) {
-                throw InvalidFilterQuery::filtersNotAllowed($diff, $allowedFilterNames);
-            }
+        if ($diff->count()) {
+            throw InvalidFilterQuery::filtersNotAllowed($diff, $allowedFilterNames);
         }
     }
 
@@ -360,14 +360,12 @@ class QueryBuilder extends Builder
 
     protected function guardAgainstUnknownAppends()
     {
-        if (!$this->silent) {
-            $appends = $this->request->appends();
+        $appends = $this->request->appends();
 
-            $diff = $appends->diff($this->allowedAppends);
+        $diff = $appends->diff($this->allowedAppends);
 
-            if ($diff->count()) {
-                throw InvalidAppendQuery::appendsNotAllowed($diff, $this->allowedAppends);
-            }
+        if ($diff->count()) {
+            throw InvalidAppendQuery::appendsNotAllowed($diff, $this->allowedAppends);
         }
     }
 

@@ -59,10 +59,10 @@ class AppendTest extends TestCase
     }
 
     /** @test */
-    public function it_can_append_attributes_even_with_unknown_appends_if_silent()
+    public function it_can_append_attributes_even_with_unknown_appends_if_safe()
     {
         config([
-            'query-builder.silent' => true
+            'query-builder.safe' => true
         ]);
 
         $model = $this

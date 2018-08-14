@@ -240,10 +240,10 @@ class FilterTest extends TestCase
     }
 
     /** @test */
-    public function it_can_filter_models_even_with_invalid_filters_if_silent()
+    public function it_can_filter_models_even_with_invalid_filters_if_safe()
     {
         config([
-            'query-builder.silent' => true
+            'query-builder.safe' => true
         ]);
 
         $models = $this
