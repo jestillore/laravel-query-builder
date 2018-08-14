@@ -110,7 +110,7 @@ class QueryBuilder extends Builder
             return Filter::partial($filter);
         });
 
-        if (!$this->safe) {
+        if (! $this->safe) {
             $this->guardAgainstUnknownFilters();
         }
 
@@ -137,7 +137,7 @@ class QueryBuilder extends Builder
 
         $this->allowedSorts = collect($sorts);
 
-        if (! $this->allowedSorts->contains('*')) {
+        if (! $this->allowedSorts->contains('*') && ! $this->safe) {
             $this->guardAgainstUnknownSorts();
         }
 

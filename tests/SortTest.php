@@ -71,6 +71,22 @@ class SortTest extends TestCase
     }
 
     /** @test */
+    public function it_will_not_throw_an_exception_even_if_a_sort_property_is_not_allowed_if_safe()
+    {
+        config([
+            'query-builder.safe' => true
+        ]);
+
+        $sortedModels = $this
+            ->createQueryFromSortRequest('name,random-field')
+            ->allowedSorts('name')
+            ->get();
+
+        $this->assertQueryExecuted('select "test_models".* from "test_models" order by "name" asc, "random-field" asc');
+        $this->assertSortedAscending($sortedModels, 'name');
+    }
+
+    /** @test */
     public function an_invalid_sort_query_exception_contains_the_unknown_and_allowed_sorts()
     {
         $exception = new InvalidSortQuery(collect(['unknown sort']), collect(['allowed sort']));
