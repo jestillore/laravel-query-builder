@@ -162,7 +162,9 @@ class QueryBuilder extends Builder
                     }, collect());
             });
 
-        $this->guardAgainstUnknownIncludes();
+        if (! $this->safe) {
+            $this->guardAgainstUnknownIncludes();
+        }
 
         $this->addIncludesToQuery($this->request->includes());
 
@@ -284,6 +286,14 @@ class QueryBuilder extends Builder
 
     protected function addIncludesToQuery(Collection $includes)
     {
+        if ($this->safe) {
+            $includes = $includes->filter(function ($include) {
+                if ($this->allowedIncludes->contains($include)) {
+                    return $include;
+                }
+            });
+        }
+
         $includes
             ->map('camel_case')
             ->map(function (string $include) {

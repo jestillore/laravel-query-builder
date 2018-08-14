@@ -107,6 +107,21 @@ class IncludeTest extends TestCase
     }
 
     /** @test */
+    public function it_can_include_model_relations_even_with_unknown_includes_if_safe()
+    {
+        config([
+            'query-builder.safe' => true
+        ]);
+
+        $models = $this
+            ->createQueryFromIncludeRequest('related-models,model-related')
+            ->allowedIncludes('related-models')
+            ->get();
+
+        $this->assertRelationLoaded($models, 'relatedModels');
+    }
+
+    /** @test */
     public function it_can_allow_multiple_includes()
     {
         $models = $this
