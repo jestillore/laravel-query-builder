@@ -175,7 +175,17 @@ class QueryBuilder extends Builder
 
         $this->guardAgainstUnknownAppends();
 
-        $this->appends = $this->request->appends();
+        $appends = $this->request->appends();
+
+        if ($this->silent) {
+            $appends = $appends->filter(function ($append) {
+                if ($this->allowedAppends->contains($append)) {
+                    return $append;
+                }
+            });
+        }
+        
+        $this->appends = $appends;
 
         return $this;
     }
@@ -350,12 +360,14 @@ class QueryBuilder extends Builder
 
     protected function guardAgainstUnknownAppends()
     {
-        $appends = $this->request->appends();
+        if (!$this->silent) {
+            $appends = $this->request->appends();
 
-        $diff = $appends->diff($this->allowedAppends);
+            $diff = $appends->diff($this->allowedAppends);
 
-        if ($diff->count()) {
-            throw InvalidAppendQuery::appendsNotAllowed($diff, $this->allowedAppends);
+            if ($diff->count()) {
+                throw InvalidAppendQuery::appendsNotAllowed($diff, $this->allowedAppends);
+            }
         }
     }
 

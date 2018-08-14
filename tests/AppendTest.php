@@ -59,6 +59,21 @@ class AppendTest extends TestCase
     }
 
     /** @test */
+    public function it_can_append_attributes_even_with_unknown_appends_if_silent()
+    {
+        config([
+            'query-builder.silent' => true
+        ]);
+
+        $model = $this
+            ->createQueryFromAppendRequest('fullname,random-attribute-to-append')
+            ->allowedAppends('fullname')
+            ->first();
+
+        $this->assertAttributeLoaded($model, 'fullname');
+    }
+
+    /** @test */
     public function it_can_allow_multiple_appends()
     {
         $model = $this
